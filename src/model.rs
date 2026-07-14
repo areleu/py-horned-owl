@@ -78,8 +78,10 @@ impl IRIParam {
     }
 }
 
-impl<'py> FromPyObject<'py> for IRIParam {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for IRIParam {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
         if let Ok(a) = ob.extract::<IRI>() {
             return Ok(IRIParam::IRI(a));
         }

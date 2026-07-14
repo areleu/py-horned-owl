@@ -2150,17 +2150,19 @@ impl<'py> IntoPyObject<'py> for ObjectPropertyExpression {
 
 }
 
-impl <'py> FromPyObject<'py> for ObjectPropertyExpression {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for ObjectPropertyExpression {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
             {
-            	let r = ObjectProperty::extract_bound(ob);
+            	let r = ObjectProperty::extract(ob);
                 if let Ok(local) = r {
                     let inner = ObjectPropertyExpression_Inner::ObjectProperty(local);
                     return Ok(ObjectPropertyExpression(inner));
                 }
             }
             {
-                let r = InverseObjectProperty::extract_bound(ob);
+                let r = InverseObjectProperty::extract(ob);
                 if let Ok(local) = r {
                     let inner = ObjectPropertyExpression_Inner::InverseObjectProperty(local);
                     return Ok(ObjectPropertyExpression(inner));
@@ -2612,24 +2614,26 @@ impl<'py> IntoPyObject<'py> for Literal {
 
 }
 
-impl <'py> FromPyObject<'py> for Literal {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for Literal {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
             {
-                let r = SimpleLiteral::extract_bound(ob);
+                let r = SimpleLiteral::extract(ob);
                 if let Ok(local) = r {
                     let inner = Literal_Inner::Simple(local);
                     return Ok(Literal(inner));
                 }
             }
             {
-                let r = LanguageLiteral::extract_bound(ob);
+                let r = LanguageLiteral::extract(ob);
                 if let Ok(local) = r {
                     let inner = Literal_Inner::Language(local);
                     return Ok(Literal(inner));
                 }
             }
             {
-                let r = DatatypeLiteral::extract_bound(ob);
+                let r = DatatypeLiteral::extract(ob);
                 if let Ok(local) = r {
                     let inner = Literal_Inner::Datatype(local);
                     return Ok(Literal(inner));
@@ -3242,45 +3246,47 @@ impl<'py> IntoPyObject<'py> for DataRange {
 
 }
 
-impl <'py> FromPyObject<'py> for DataRange {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for DataRange {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
             {
-            	let r = Datatype::extract_bound(ob);
+            	let r = Datatype::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::Datatype(local);
                     return Ok(DataRange(inner));
                 }
             }
             {
-                let r = DataIntersectionOf::extract_bound(ob);
+                let r = DataIntersectionOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::DataIntersectionOf(local);
                     return Ok(DataRange(inner));
                 }
             }
             {
-                let r = DataUnionOf::extract_bound(ob);
+                let r = DataUnionOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::DataUnionOf(local);
                     return Ok(DataRange(inner));
                 }
             }
             {
-                let r = DataComplementOf::extract_bound(ob);
+                let r = DataComplementOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::DataComplementOf(local);
                     return Ok(DataRange(inner));
                 }
             }
             {
-                let r = DataOneOf::extract_bound(ob);
+                let r = DataOneOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::DataOneOf(local);
                     return Ok(DataRange(inner));
                 }
             }
             {
-                let r = DatatypeRestriction::extract_bound(ob);
+                let r = DatatypeRestriction::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::DatatypeRestriction(local);
                     return Ok(DataRange(inner));
@@ -5348,129 +5354,131 @@ impl<'py> IntoPyObject<'py> for ClassExpression {
 
 }
 
-impl <'py> FromPyObject<'py> for ClassExpression {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for ClassExpression {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
             {
-            	let r = Class::extract_bound(ob);
+            	let r = Class::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::Class(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectIntersectionOf::extract_bound(ob);
+                let r = ObjectIntersectionOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectIntersectionOf(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectUnionOf::extract_bound(ob);
+                let r = ObjectUnionOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectUnionOf(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectComplementOf::extract_bound(ob);
+                let r = ObjectComplementOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectComplementOf(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectOneOf::extract_bound(ob);
+                let r = ObjectOneOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectOneOf(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectSomeValuesFrom::extract_bound(ob);
+                let r = ObjectSomeValuesFrom::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectSomeValuesFrom(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectAllValuesFrom::extract_bound(ob);
+                let r = ObjectAllValuesFrom::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectAllValuesFrom(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectHasValue::extract_bound(ob);
+                let r = ObjectHasValue::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectHasValue(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectHasSelf::extract_bound(ob);
+                let r = ObjectHasSelf::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectHasSelf(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectMinCardinality::extract_bound(ob);
+                let r = ObjectMinCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectMinCardinality(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectMaxCardinality::extract_bound(ob);
+                let r = ObjectMaxCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectMaxCardinality(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectExactCardinality::extract_bound(ob);
+                let r = ObjectExactCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectExactCardinality(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataSomeValuesFrom::extract_bound(ob);
+                let r = DataSomeValuesFrom::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataSomeValuesFrom(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataAllValuesFrom::extract_bound(ob);
+                let r = DataAllValuesFrom::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataAllValuesFrom(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataHasValue::extract_bound(ob);
+                let r = DataHasValue::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataHasValue(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataMinCardinality::extract_bound(ob);
+                let r = DataMinCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataMinCardinality(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataMaxCardinality::extract_bound(ob);
+                let r = DataMaxCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataMaxCardinality(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataExactCardinality::extract_bound(ob);
+                let r = DataExactCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataExactCardinality(local);
                     return Ok(ClassExpression(inner));
@@ -17346,52 +17354,54 @@ impl<'py> IntoPyObject<'py> for Atom {
 
 }
 
-impl <'py> FromPyObject<'py> for Atom {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for Atom {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
             {
-                let r = BuiltInAtom::extract_bound(ob);
+                let r = BuiltInAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::BuiltInAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = ClassAtom::extract_bound(ob);
+                let r = ClassAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::ClassAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = DataPropertyAtom::extract_bound(ob);
+                let r = DataPropertyAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::DataPropertyAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = DataRangeAtom::extract_bound(ob);
+                let r = DataRangeAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::DataRangeAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = DifferentIndividualsAtom::extract_bound(ob);
+                let r = DifferentIndividualsAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::DifferentIndividualsAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = ObjectPropertyAtom::extract_bound(ob);
+                let r = ObjectPropertyAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::ObjectPropertyAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = SameIndividualAtom::extract_bound(ob);
+                let r = SameIndividualAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::SameIndividualAtom(local);
                     return Ok(Atom(inner));
