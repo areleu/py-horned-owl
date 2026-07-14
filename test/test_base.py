@@ -25,18 +25,28 @@ def simple_ontology_comps() -> List[Component]:
         DeclareClass(Class(IRI.parse("https://example.com/D"))),
         SubClassOf(
             sup=Class(IRI.parse("https://example.com/A")),
-            sub=Class(IRI.parse("https://example.com/B"))),
+            sub=Class(IRI.parse("https://example.com/B")),
+        ),
         SubClassOf(
             sup=Class(IRI.parse("https://example.com/B")),
-            sub=Class(IRI.parse("https://example.com/D"))),
+            sub=Class(IRI.parse("https://example.com/D")),
+        ),
         AnnotationAssertion(
             IRI.parse("https://example.com/A"),
-            Annotation(AnnotationProperty(IRI.parse(RDFS_LABEL)),
-                       SimpleLiteral("ClassA"))),
+            Annotation(
+                AnnotationProperty(IRI.parse(RDFS_LABEL)),
+                SimpleLiteral("ClassA"),
+                set(),
+            ),
+        ),
         AnnotationAssertion(
             IRI.parse("https://example.com/B"),
-            Annotation(AnnotationProperty(IRI.parse(RDFS_LABEL)),
-                       SimpleLiteral("ClassB")))
+            Annotation(
+                AnnotationProperty(IRI.parse(RDFS_LABEL)),
+                SimpleLiteral("ClassB"),
+                set(),
+            ),
+        ),
     ]
 
 
