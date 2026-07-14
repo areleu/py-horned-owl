@@ -28,7 +28,7 @@ pub struct {{ model.name }}({{ model.name }}_Inner);
     {%- endfor -%}",
         "\n\n",doc!({{ v_name_full }}))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct {{ v_name_full }}
     {%- if variant.fields is list %}(

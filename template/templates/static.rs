@@ -39,7 +39,7 @@ impl FromCompatible<IRI> for horned_owl::model::IRI<Arc<str>> {
 
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[pyclass(module = "pyhornedowl.model")]
+#[pyclass(module = "pyhornedowl.model",from_py_object)]
 pub struct IRI(horned_owl::model::IRI<ArcStr>);
 
 impl From<IRI> for horned_owl::model::IRI<ArcStr> {
@@ -123,7 +123,7 @@ impl FromCompatible<horned_owl::vocab::Facet> for Facet {
 
 #[doc = doc!(Facet)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[pyclass(module = "pyhornedowl.model")]
+#[pyclass(module = "pyhornedowl.model",from_py_object)]
 pub enum Facet {
     Length = 1,
     MinLength = 2,

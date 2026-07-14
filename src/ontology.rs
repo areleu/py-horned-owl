@@ -55,7 +55,7 @@ macro_rules! entity_query {
     }};
 }
 
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Clone, Copy)]
 /// Values to indicate when to build the additional indexes.
 ///
@@ -76,7 +76,7 @@ pub enum IndexCreationStrategy {
 }
 
 /// Represents a loaded ontology.
-#[pyclass]
+#[pyclass(from_py_object)]
 pub struct PyIndexedOntology {
     //State variables private to Rust, exposed through methods to Python
     pub labels_to_iris: HashMap<String, IRI<ArcStr>>,
