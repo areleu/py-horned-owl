@@ -188,7 +188,7 @@ jobs:
   build-docs:
     needs: linux
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'release' }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
