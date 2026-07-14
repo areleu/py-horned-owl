@@ -6,9 +6,12 @@ use std::sync::{Arc, Mutex};
 use curie::PrefixMapping;
 use horned_bin::path_type;
 use horned_owl::error::HornedError;
-use horned_owl::io::{ParserConfiguration, RDFParserConfiguration, ResourceType};
+use horned_owl::io::{
+    InputFormat, OWXParserConfiguration, ParserConfiguration, RDFParserConfiguration, ResourceType,
+};
 use horned_owl::model::*;
 use pyo3::exceptions::PyValueError;
+use pyo3::ffi::INT_MAX;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
@@ -54,9 +57,11 @@ pub fn guess_serialization(path: &String, serialization: Option<&str>) -> PyResu
         None => Ok(path_type(
             path.as_ref(),
             &ParserConfiguration {
+                lax: true,
                 rdf: RDFParserConfiguration {
                     ..Default::default()
                 },
+                input_format: Some(InputFormat::Guess),
                 ..Default::default()
             },
         )
@@ -72,7 +77,11 @@ fn open_ontology_owx<R: BufRead>(
         content,
         b,
         ParserConfiguration {
+            lax: true,
             rdf: RDFParserConfiguration {
+                ..Default::default()
+            },
+            owx: OWXParserConfiguration {
                 ..Default::default()
             },
             ..Default::default()
