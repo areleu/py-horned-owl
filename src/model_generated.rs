@@ -6390,7 +6390,7 @@ impl FromCompatible<&Vec<horned_owl::model::AnnotationValue<ArcStr>>> for VecWra
         VecWrap::<AnnotationValue>::from(value)
     }
 }
-#[doc = concat!("Annotation(ap: AnnotationProperty,av: AnnotationValue,)",
+#[doc = concat!("Annotation(ap: AnnotationProperty,av: AnnotationValue,ann: typing.Set[Annotation],)",
     "\n\n",
     doc!(Annotation)
 )]
@@ -6404,23 +6404,29 @@ pub struct Annotation {
         #[doc="av: AnnotationValue"]
         #[pyo3(get,set)]
         pub av: AnnotationValue,
+    
+        #[doc="ann: typing.Set[Annotation]"]
+        #[pyo3(get,set)]
+        pub ann: BTreeSetWrap<Annotation>,
     }
 
 #[pymethods]
 impl Annotation {
     #[new]
-    fn new(ap: AnnotationProperty,av: AnnotationValue,) -> Self {
+    fn new(ap: AnnotationProperty,av: AnnotationValue,ann: BTreeSetWrap<Annotation>,) -> Self {
         Annotation {
                 ap,
                 av,
+                ann,
         }
     }
 
     #[classattr]
-    fn __match_args__() -> PyResult<(String, String,)> {
+    fn __match_args__() -> PyResult<(String, String, String,)> {
         Ok((
             "ap".to_string(),
             "av".to_string(),
+            "ann".to_string(),
         ))
     }
 
@@ -6428,6 +6434,7 @@ impl Annotation {
         match name {
             "ap" => self.ap.clone().into_pyobject(py).map(Bound::into_any),
             "av" => self.av.clone().into_pyobject(py).map(Bound::into_any),
+            "ann" => self.ann.clone().into_pyobject(py).map(Bound::into_any),
             &_ => Err(PyKeyError::new_err(format!("The field '{}' does not exist.", name)))
         }
     }
@@ -6440,6 +6447,10 @@ impl Annotation {
             },
             "av" => {
                 self.av = value.extract()?;
+                Ok(())
+            },
+            "ann" => {
+                self.ann = value.extract()?;
                 Ok(())
             },
             &_ => Err(PyKeyError::new_err(format!("The field '{}' does not exist.", name)))
@@ -6465,6 +6476,7 @@ impl From<&horned_owl::model::Annotation<ArcStr>> for Annotation {
         Annotation {
             ap: IntoCompatible::<AnnotationProperty>::into_c(value.ap.borrow()),
             av: IntoCompatible::<AnnotationValue>::into_c(value.av.borrow()),
+            ann: IntoCompatible::<BTreeSetWrap<Annotation>>::into_c(value.ann.borrow()),
         }
     }
 }
@@ -6475,6 +6487,7 @@ impl From<&Annotation> for horned_owl::model::Annotation<ArcStr> {
         horned_owl::model::Annotation::<ArcStr> {
             ap: value.ap.borrow().into_c(),
             av: value.av.borrow().into_c(),
+            ann: value.ann.borrow().into_c(),
         }
     }
 }

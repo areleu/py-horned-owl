@@ -18,8 +18,8 @@ features = ["abi3-py37", "extension-module", "experimental-inspect", "multiple-p
 [dependencies]
 # horned-owl = "^1.1"
 # horned-bin = "^1.1"
-horned-owl = "^1.4"
-horned-bin = "^1.4"
+horned-owl = { git = "https://github.com/phillord/horned-owl.git", branch = "devel" }
+horned-bin = { git = "https://github.com/phillord/horned-owl.git", branch = "devel" }
 py-horned-owl-reasoner = { path = "lib/reasoner" }
 curie = "0.1.2"
 libloading = "0.8"

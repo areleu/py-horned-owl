@@ -1,9 +1,5 @@
-use std::collections::{BTreeSet, HashMap, HashSet};
-use std::fs::File;
-use std::io::Write;
-use std::sync::{Arc, Mutex, RwLock};
 use crate::prefix_mapping::PrefixMapping;
-use crate::reasoning::{DynamicLoadedReasoner};
+use crate::reasoning::DynamicLoadedReasoner;
 use crate::structural_reasoner::StructuralReasoner;
 use crate::wrappers::BTreeSetWrap;
 use crate::{guess_serialization, model, parse_serialization, to_py_err};
@@ -27,6 +23,11 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyNone;
 use pyo3::{pyclass, pymethods, Bound, Py, PyAny, PyResult, Python};
+use std::collections::{BTreeSet, HashMap, HashSet};
+use std::fs::File;
+use std::io::Write;
+use std::iter::FusedIterator;
+use std::sync::{Arc, Mutex, RwLock};
 
 macro_rules! into_iri {
     ($s:ident, $py:ident, $iri:ident) => {
@@ -139,7 +140,14 @@ impl Clone for PyIndexedOntology {
     }
 }
 
-impl Ontology<ArcStr> for PyIndexedOntology {}
+impl Ontology<ArcStr> for PyIndexedOntology {
+    type ComponentIter<'c> = PyOntIter<'c>;
+
+    fn iter(&self) -> Self::ComponentIter<'_> {
+        PyIndexedOntology::iter(self)
+    }
+}
+
 impl MutableOntology<ArcStr> for PyIndexedOntology {
     fn insert<AA>(&mut self, ax: AA) -> bool
     where
@@ -293,7 +301,7 @@ impl PyIndexedOntology {
         &mut self,
         py: Python<'_>,
         iri: model::IRIParam,
-        label: String
+        label: String,
     ) -> PyResult<()> {
         let iri: IRI<ArcStr> = into_iri!(self, py, iri);
 
@@ -308,6 +316,7 @@ impl PyIndexedOntology {
                     av: AnnotationValue::Literal(Literal::Simple {
                         literal: label.clone(),
                     }),
+                    ann: BTreeSet::default(),
                 },
             })
             .into();
@@ -329,6 +338,7 @@ impl PyIndexedOntology {
                         Annotation {
                             ap,
                             av: AnnotationValue::Literal(Literal::Simple { literal: _old }),
+                            ann,
                         },
                 }) if subj == &iri => {
                     if AnnotationBuiltIn::Label.to_string().eq(&ap.0.to_string()) {
@@ -375,6 +385,7 @@ impl PyIndexedOntology {
                     Annotation {
                         ap,
                         av: AnnotationValue::Literal(Literal::Simple { literal }),
+                        ann,
                     },
             } if *literal == label
                 && AnnotationBuiltIn::Label.underlying().eq(&ap.0.to_string()) =>
@@ -504,12 +515,8 @@ impl PyIndexedOntology {
         class_iri: model::IRIParam,
         ann_iri: model::IRIParam,
     ) -> PyResult<Option<String>> {
-        self.get_annotations(
-            py,
-            class_iri,
-            ann_iri
-        )
-        .map(|x| x.first().map(Into::into))
+        self.get_annotations(py, class_iri, ann_iri)
+            .map(|x| x.first().map(Into::into))
     }
 
     /// get_annotations(self, class_iri: model.IRIParam, ann_iri: model.IRIParam) -> List[str]
@@ -540,15 +547,15 @@ impl PyIndexedOntology {
                 match &aax.component {
                     Component::AnnotationAssertion(AnnotationAssertion { subject: AnnotationSubject::IRI(s), ann }) if &class_iri == s => {
                         match ann {
-                            Annotation { ap, av: AnnotationValue::Literal(Literal::Simple { literal }) } => {
+                            Annotation { ap, av: AnnotationValue::Literal(Literal::Simple { literal }), ann } => {
                                 if ann_iri.eq(&ap.0) { Some(literal.clone()) } else { None }
                             }
                             //Language { literal: String, lang: String },
-                            Annotation { ap, av: AnnotationValue::Literal(Literal::Language { literal, lang: _ }) } => {
+                            Annotation { ap, av: AnnotationValue::Literal(Literal::Language { literal, lang: _ }), ann } => {
                                 if ann_iri.eq(&ap.0) { Some(literal.clone()) } else { None }
                             }
                             //Datatype { literal: String, datatype_iri: IRI },
-                            Annotation { ap, av: AnnotationValue::Literal(Literal::Datatype { literal, datatype_iri: _ }) } => {
+                            Annotation { ap, av: AnnotationValue::Literal(Literal::Datatype { literal, datatype_iri: _ }), ann } => {
                                 if ann_iri.eq(&ap.0) { Some(literal.clone()) } else { None }
                             }
                             _ => None,
@@ -787,16 +794,11 @@ impl PyIndexedOntology {
     /// Convenience method to create a Class from an IRI.
     ///
     /// Uses the `iri` method to cache native IRI instances.
-    /// 
+    ///
     /// .. deprecated::
     ///     Use `PyIndexedOntology.class_` instead
     #[pyo3(signature = (iri))]
-    pub fn clazz(
-        &self,
-        py: Python<'_>,
-        iri: model::IRIParam
-    ) -> PyResult<model::Class> {
-
+    pub fn clazz(&self, py: Python<'_>, iri: model::IRIParam) -> PyResult<model::Class> {
         PyErr::warn(
             py,
             &py.get_type::<pyo3::exceptions::PyDeprecationWarning>(),
@@ -807,16 +809,12 @@ impl PyIndexedOntology {
     }
 
     /// class_(self, iri: model.IRIParam) -> model.Class
-    /// 
+    ///
     /// Convenience method to create a Class from an IRI.
-    /// 
+    ///
     /// Uses the `iri` method to cache native IRI instances.
     #[pyo3(signature = (iri))]
-    pub fn class_(
-        &self,
-        py: Python<'_>,
-        iri: model::IRIParam
-    ) -> PyResult<model::Class> {
+    pub fn class_(&self, py: Python<'_>, iri: model::IRIParam) -> PyResult<model::Class> {
         Ok(model::Class(into_iri!(self, py, iri).into()))
     }
 
@@ -824,11 +822,7 @@ impl PyIndexedOntology {
     ///
     /// Convenience method to add a Declare(Class(iri)) axiom.
     #[pyo3(signature = (iri))]
-    pub fn declare_class(
-        &mut self,
-        py: Python<'_>,
-        iri: model::IRIParam,
-    ) -> PyResult<bool> {
+    pub fn declare_class(&mut self, py: Python<'_>, iri: model::IRIParam) -> PyResult<bool> {
         Ok(self.declare::<horned_owl::model::Class<ArcStr>>(self.class_(py, iri)?.into()))
     }
 
@@ -936,11 +930,7 @@ impl PyIndexedOntology {
     ///
     /// Convenience method to add a Declare(NamedIndividual(iri)) axiom.
     #[pyo3(signature = (iri))]
-    pub fn declare_individual(
-        &mut self,
-        py: Python<'_>,
-        iri: model::IRIParam,
-    ) -> PyResult<bool> {
+    pub fn declare_individual(&mut self, py: Python<'_>, iri: model::IRIParam) -> PyResult<bool> {
         Ok(self.declare::<horned_owl::model::NamedIndividual<ArcStr>>(
             self.named_individual(py, iri)?.into(),
         ))
@@ -973,7 +963,7 @@ impl PyIndexedOntology {
         )?;
         let parent_class: Class<ArcStr> = self.class_(py, parent_iri)?.into();
         let parent_class: ClassExpression<ArcStr> = parent_class.into();
-        
+
         // Use structural reasoner for hierarchy traversal
         let reasoner = self.create_structural_reasoner();
         let descendants = reasoner
@@ -1161,6 +1151,7 @@ impl PyIndexedOntology {
                 horned_owl::io::owx::writer::write(&mut file, &amo, Some(&mapping.0))
             }
             ResourceType::RDF => horned_owl::io::rdf::writer::write(&mut file, &amo),
+            ResourceType::OMN => todo!(),
         };
 
         result
@@ -1168,13 +1159,69 @@ impl PyIndexedOntology {
             .map_err(to_py_err!("Problem saving the ontology to a file"))
     }
 
-    pub fn add_reasoner(&mut self, reasoner: DynamicLoadedReasoner) -> crate::reasoning::PyReasoner {
+    pub fn add_reasoner(
+        &mut self,
+        reasoner: DynamicLoadedReasoner,
+    ) -> crate::reasoning::PyReasoner {
         let r = crate::reasoning::PyReasoner(Arc::new(Mutex::new(reasoner)));
         self.reasoners.push(r.clone());
         r
     }
+
+    pub fn iter(&self) -> PyOntIter<'_> {
+        PyOntIter(Box::new(self.set_index.iter().map(|m| m.as_ref())))
+    }
 }
 
+pub struct PyOntIter<'a>(Box<dyn Iterator<Item = &'a AnnotatedComponent<ArcStr>> + 'a>);
+
+impl<'a> Iterator for PyOntIter<'a> {
+    type Item = &'a AnnotatedComponent<ArcStr>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl FusedIterator for PyOntIter<'_> {}
+
+impl<'a> IntoIterator for &'a PyIndexedOntology {
+    type Item = &'a AnnotatedComponent<ArcStr>;
+    type IntoIter = PyOntIter<'a>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+pub struct PyOntIntoIter(
+    std::iter::Map<
+        std::collections::hash_set::IntoIter<AnnotatedComponent<ArcStr>>,
+        fn(AnnotatedComponent<ArcStr>) -> AnnotatedComponent<ArcStr>,
+    >,
+);
+
+impl Iterator for PyOntIntoIter {
+    type Item = AnnotatedComponent<ArcStr>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl FusedIterator for PyOntIntoIter {}
+
+impl ExactSizeIterator for PyOntIntoIter {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl IntoIterator for PyIndexedOntology {
+    type Item = AnnotatedComponent<ArcStr>;
+    type IntoIter = PyOntIntoIter;
+    fn into_iter(self) -> Self::IntoIter {
+        todo!()
+        // PyOntIntoIter(self.set_index.iter().map(|c| (c).clone()))
+    }
+}
 impl From<PyIndexedOntology> for SetOntology<ArcStr> {
     fn from(value: PyIndexedOntology) -> Self {
         let mut o = SetOntology::<ArcStr>::new();

@@ -51,7 +51,16 @@ fn parse_serialization(serialization: &str) -> PyResult<ResourceType> {
 pub fn guess_serialization(path: &String, serialization: Option<&str>) -> PyResult<ResourceType> {
     match serialization {
         Some(s) => parse_serialization(s),
-        None => Ok(path_type(path.as_ref()).unwrap_or(ResourceType::OWX)),
+        None => Ok(path_type(
+            path.as_ref(),
+            &ParserConfiguration {
+                rdf: RDFParserConfiguration {
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        )
+        .unwrap_or(ResourceType::OWX)),
     }
 }
 
@@ -59,7 +68,16 @@ fn open_ontology_owx<R: BufRead>(
     content: &mut R,
     b: &Build<Arc<str>>,
 ) -> Result<(PyIndexedOntology, PrefixMapping), HornedError> {
-    horned_owl::io::owx::reader::read_with_build(content, b)
+    horned_owl::io::owx::reader::read_with_build(
+        content,
+        b,
+        ParserConfiguration {
+            rdf: RDFParserConfiguration {
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
 }
 
 fn open_ontology_ofn<R: BufRead>(
@@ -79,7 +97,6 @@ fn open_ontology_rdf<R: BufRead>(
         b,
         ParserConfiguration {
             rdf: RDFParserConfiguration {
-                lax: true,
                 ..Default::default()
             },
             ..Default::default()
@@ -118,6 +135,7 @@ fn open_ontology_from_file(
         ResourceType::OFN => open_ontology_ofn(&mut f, &b),
         ResourceType::OWX => open_ontology_owx(&mut f, &b),
         ResourceType::RDF => open_ontology_rdf(&mut f, &b, index_strategy),
+        ResourceType::OMN => todo!(),
     }
     .map_err(to_py_err!("Failed to open ontology"))?;
 
@@ -155,6 +173,7 @@ fn open_ontology_from_string(
         Some(ResourceType::OFN) => open_ontology_ofn(&mut f, &b),
         Some(ResourceType::OWX) => open_ontology_owx(&mut f, &b),
         Some(ResourceType::RDF) => open_ontology_rdf(&mut f, &b, index_strategy),
+        Some(ResourceType::OMN) => todo!(),
         None => open_ontology_owx(&mut BufReader::new(ontology.as_bytes()), &b)
             .or_else(|_| open_ontology_ofn(&mut BufReader::new(ontology.as_bytes()), &b))
             .or_else(|_| {
@@ -219,14 +238,16 @@ fn pyhornedowl(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(open_ontology, m)?)?;
     m.add_function(wrap_pyfunction!(open_ontology_from_file, m)?)?;
     m.add_function(wrap_pyfunction!(open_ontology_from_string, m)?)?;
-    
+
     let model_sub_module = model::py_module(py)?;
     m.add_submodule(&model_sub_module)?;
 
-
     let reasoning_sub_module = PyModule::new(py, "reasoning")?;
     reasoning_sub_module.add_function(wrap_pyfunction!(create_reasoner, &reasoning_sub_module)?)?;
-    reasoning_sub_module.add_function(wrap_pyfunction!(create_structural_reasoner, &reasoning_sub_module)?)?;
+    reasoning_sub_module.add_function(wrap_pyfunction!(
+        create_structural_reasoner,
+        &reasoning_sub_module
+    )?)?;
     reasoning_sub_module.add_class::<reasoning::PyReasoner>()?;
     m.add_submodule(&reasoning_sub_module)?;
 
