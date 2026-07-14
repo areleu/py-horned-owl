@@ -61,7 +61,7 @@ pub fn guess_serialization(path: &String, serialization: Option<&str>) -> PyResu
                 rdf: RDFParserConfiguration {
                     ..Default::default()
                 },
-                input_format: Some(InputFormat::Guess),
+                input_format: None,
                 ..Default::default()
             },
         )
