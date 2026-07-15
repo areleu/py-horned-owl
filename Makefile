@@ -23,9 +23,9 @@ lib: model docs
 
 .venv:
 	uv venv
-	uv sync --all-groups
+	uv sync --all-groups --no-install-project
 
 tests: dev
-	uv sync
+	uv sync --no-install-project
 	PYO3_PYTHON="/usr/bin/python3" cargo test
 	uv run pytest --doctest-modules test/
