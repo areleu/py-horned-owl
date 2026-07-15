@@ -23,6 +23,7 @@ horned-bin = { git = "https://github.com/phillord/horned-owl.git", branch = "dev
 py-horned-owl-reasoner = { path = "lib/reasoner" }
 curie = "0.1.2"
 libloading = "0.8"
+oxrdfio = "0.2.5"
 
 [profile.dev]
 opt-level=3

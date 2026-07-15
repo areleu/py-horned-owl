@@ -7,13 +7,14 @@ use curie::PrefixMapping;
 use horned_bin::path_type;
 use horned_owl::error::HornedError;
 use horned_owl::io::{
-    InputFormat, OWXParserConfiguration, ParserConfiguration, RDFParserConfiguration, ResourceType,
+    OWXParserConfiguration, ParserConfiguration, RDFParserConfiguration, ResourceType,
 };
 use horned_owl::model::*;
 use pyo3::exceptions::PyValueError;
-use pyo3::ffi::INT_MAX;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
+
+use oxrdfio::RdfFormat;
 
 use pyhornedowlreasoner::PyReasoner;
 
@@ -43,6 +44,7 @@ fn parse_serialization(serialization: &str) -> PyResult<ResourceType> {
         "owx" => Ok(ResourceType::OWX),
         "ofn" => Ok(ResourceType::OFN),
         "rdf" => Ok(ResourceType::RDF),
+        "ttl" => Ok(ResourceType::RDF),
         "owl" => Ok(ResourceType::RDF),
         s => Err(PyValueError::new_err(format!(
             "Unknown serialization {}",
@@ -100,14 +102,13 @@ fn open_ontology_rdf<R: BufRead>(
     content: &mut R,
     b: &Build<ArcStr>,
     index_strategy: IndexCreationStrategy,
+    format: Option<RdfFormat>,
 ) -> Result<(PyIndexedOntology, PrefixMapping), HornedError> {
     horned_owl::io::rdf::reader::read_with_build::<ArcStr, ArcAnnotatedComponent, R>(
         content,
         b,
         ParserConfiguration {
-            rdf: RDFParserConfiguration {
-                ..Default::default()
-            },
+            rdf: RDFParserConfiguration { format },
             ..Default::default()
         },
     )
@@ -134,8 +135,9 @@ fn open_ontology_from_file(
     index_strategy: IndexCreationStrategy,
 ) -> PyResult<PyIndexedOntology> {
     let serialization = guess_serialization(&path, serialization)?;
-
-    let file = File::open(path)?;
+    let ref_path = Path::new(&path);
+    let extension = ref_path.extension().and_then(|ext| ext.to_str());
+    let file = File::open(ref_path)?;
     let mut f = BufReader::new(file);
 
     let b = Build::new_arc();
@@ -143,7 +145,13 @@ fn open_ontology_from_file(
     let (mut pio, mapping) = match serialization {
         ResourceType::OFN => open_ontology_ofn(&mut f, &b),
         ResourceType::OWX => open_ontology_owx(&mut f, &b),
-        ResourceType::RDF => open_ontology_rdf(&mut f, &b, index_strategy),
+        ResourceType::RDF => {
+            let fmt = match extension {
+                Some(s) => oxrdfio::RdfFormat::from_extension(s),
+                None => None,
+            };
+            open_ontology_rdf(&mut f, &b, index_strategy, fmt)
+        }
         ResourceType::OMN => todo!(),
     }
     .map_err(to_py_err!("Failed to open ontology"))?;
@@ -181,12 +189,17 @@ fn open_ontology_from_string(
     let (mut pio, mapping) = match serialization {
         Some(ResourceType::OFN) => open_ontology_ofn(&mut f, &b),
         Some(ResourceType::OWX) => open_ontology_owx(&mut f, &b),
-        Some(ResourceType::RDF) => open_ontology_rdf(&mut f, &b, index_strategy),
+        Some(ResourceType::RDF) => open_ontology_rdf(&mut f, &b, index_strategy, None),
         Some(ResourceType::OMN) => todo!(),
         None => open_ontology_owx(&mut BufReader::new(ontology.as_bytes()), &b)
             .or_else(|_| open_ontology_ofn(&mut BufReader::new(ontology.as_bytes()), &b))
             .or_else(|_| {
-                open_ontology_rdf(&mut BufReader::new(ontology.as_bytes()), &b, index_strategy)
+                open_ontology_rdf(
+                    &mut BufReader::new(ontology.as_bytes()),
+                    &b,
+                    index_strategy,
+                    None,
+                )
             }),
     }
     .map_err(to_py_err!("Failed to open ontology"))?;
