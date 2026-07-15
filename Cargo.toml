@@ -1,6 +1,6 @@
 [package]
 name = "py-horned-owl"
-version = "1.4.0"
+version = "1.4.1"
 authors = ["Janna Hastings <j.hastings@ucl.ac.uk>"]
 edition = "2021"
 license = "LGPL-3.0-or-later"
