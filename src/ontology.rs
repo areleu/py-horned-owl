@@ -9,7 +9,7 @@ use horned_owl::io::ResourceType;
 use horned_owl::model::{
     AnnotatedComponent, Annotation, AnnotationAssertion, AnnotationSubject, AnnotationValue,
     ArcAnnotatedComponent, ArcStr, Build, Class, ClassExpression, Component, ComponentKind, ForIRI,
-    HigherKinded, Literal, MutableOntology, Ontology, OntologyID, IRI,
+    HigherKinded, Kinded, Literal, MutableOntology, Ontology, OntologyID, SubClassOf, IRI,
 };
 use horned_owl::ontology::component_mapped::{
     ArcComponentMappedOntology, ComponentMappedIndex, ComponentMappedOntology,
@@ -17,7 +17,7 @@ use horned_owl::ontology::component_mapped::{
 use horned_owl::ontology::indexed::OntologyIndex;
 use horned_owl::ontology::iri_mapped::IRIMappedIndex;
 use horned_owl::ontology::set::{SetIndex, SetOntology};
-use horned_owl::vocab::AnnotationBuiltIn;
+use horned_owl::vocab::{AnnotationBuiltIn, OWL};
 use pyhornedowlreasoner::{PyReasoner, Reasoner};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -307,7 +307,10 @@ impl PyIndexedOntology {
 
         let ax1: AnnotatedComponent<ArcStr>;
         {
-            let build = self.build.read().unwrap();
+            let build = self
+                .build
+                .read()
+                .map_err(to_py_err!("Failed get build instance!"))?;
 
             ax1 = Component::AnnotationAssertion(AnnotationAssertion {
                 subject: iri.clone().into(),
@@ -420,7 +423,7 @@ impl PyIndexedOntology {
 
     /// get_subclasses(self, iri: model.IRIParam) -> Set[str]
     ///
-    /// Gets all direct subclasses of an entity.
+    /// Gets all asserted (named) direct subclasses of a class.
     #[pyo3[name="get_subclasses", signature = (iri)]]
     pub fn py_get_subclasses(
         &mut self,
@@ -432,7 +435,10 @@ impl PyIndexedOntology {
         let classes: HashSet<String> = self
             .get_subclasses(&iri)
             .into_iter()
-            .map(|i| i.to_string())
+            .filter_map(|ce| match ce {
+                ClassExpression::Class(Class(i)) => Some(i.to_string()),
+                _ => None,
+            })
             .collect();
 
         Ok(classes)
@@ -440,8 +446,7 @@ impl PyIndexedOntology {
 
     /// get_superclasses(self, iri: model.IRIParam) -> Set[str]
     ///
-    /// Gets all direct superclasses of an entity.
-    ///
+    /// Gets all asserted (named) direct superclasses of a class.
     #[pyo3[name="get_superclasses", signature = (iri)]]
     pub fn py_get_superclasses(
         &mut self,
@@ -453,10 +458,40 @@ impl PyIndexedOntology {
         let classes: HashSet<String> = self
             .get_superclasses(&iri)
             .into_iter()
-            .map(|i| i.to_string())
+            .filter_map(|ce| match ce {
+                ClassExpression::Class(Class(i)) => Some(i.to_string()),
+                _ => None,
+            })
             .collect();
 
         Ok(classes)
+    }
+
+    /// get_root_classes(self) -> Set[str]
+    ///
+    /// Gets all (named) root classes, i.e. all classes with no superclasses (except owl:Thing).
+    pub fn get_root_classes(&mut self) -> PyResult<HashSet<String>> {
+        let owl_thing = self
+            .build
+            .read()
+            .map_err(to_py_err!("Cannot get build instance!"))?
+            .class(OWL::Thing);
+
+        let component_index = match self.component_index.as_ref() {
+            Some(c) => c,
+            _ => {
+                self.build_component_index();
+                self.component_index
+                    .as_ref()
+                    .ok_or_else(|| PyValueError::new_err("Component index could not be created!"))?
+            }
+        };
+
+        Ok(
+            StructuralReasoner::get_direct_subclasses_of_iri(component_index, &owl_thing)
+                .map(|c| c.0.to_string())
+                .collect(),
+        )
     }
 
     /// get_classes(self) -> Set[str]
@@ -501,42 +536,42 @@ impl PyIndexedOntology {
         entity_query!(self, ComponentKind::DeclareNamedIndividual, Component::DeclareNamedIndividual(x) => x)
     }
 
-    /// get_annotation(self, class_iri: model.IRIParam, ann_iri: model.IRIParam) -> Optional[str]
+    /// get_annotation(self, entity_iri: model.IRIParam, ann_iri: model.IRIParam) -> Optional[str]
     ///
     /// Gets the first annotated value for an entity and annotation property.
     ///
     /// Note: If there are multiple annotation axioms for the queried entity and annotation property,
     /// the order is neither necessarily the same as in the ontology neither is it stable.
     /// Get all annotation values with `PyIndexedOntology.get_annotations`.
-    #[pyo3(signature = (class_iri, ann_iri))]
+    #[pyo3(signature = (entity_iri, ann_iri))]
     pub fn get_annotation(
         &mut self,
         py: Python<'_>,
-        class_iri: model::IRIParam,
+        entity_iri: model::IRIParam,
         ann_iri: model::IRIParam,
     ) -> PyResult<Option<String>> {
-        self.get_annotations(py, class_iri, ann_iri)
+        self.get_annotations(py, entity_iri, ann_iri)
             .map(|x| x.first().map(Into::into))
     }
 
-    /// get_annotations(self, class_iri: model.IRIParam, ann_iri: model.IRIParam) -> List[str]
+    /// get_annotations(self, entity_iri: model.IRIParam, ann_iri: model.IRIParam) -> List[str]
     ///
     /// Gets all annotated value for an entity and annotation property.
     ///
     /// Note: The order is neither necessarily the same as in the ontology neither is it stable.
     /// Get all annotation values with `PyIndexedOntology.get_annotations`.
-    #[pyo3(signature = (class_iri, ann_iri))]
+    #[pyo3(signature = (entity_iri, ann_iri))]
     pub fn get_annotations(
         &mut self,
         py: Python<'_>,
-        class_iri: model::IRIParam,
+        entity_iri: model::IRIParam,
         ann_iri: model::IRIParam,
     ) -> PyResult<Vec<String>> {
-        let class_iri: IRI<ArcStr> = into_iri!(self, py, class_iri);
+        let entity_iri: IRI<ArcStr> = into_iri!(self, py, entity_iri);
         let ann_iri: IRI<ArcStr> = into_iri!(self, py, ann_iri);
 
         let components = if let Some(iri_index) = &self.iri_index {
-            Box::new(iri_index.component_for_iri(&class_iri))
+            Box::new(iri_index.component_for_iri(&entity_iri))
                 as Box<dyn Iterator<Item = &AnnotatedComponent<ArcStr>>>
         } else {
             Box::new((&self.set_index).into_iter())
@@ -545,7 +580,7 @@ impl PyIndexedOntology {
         let literal_values = components
             .filter_map(|aax: &AnnotatedComponent<ArcStr>| {
                 match &aax.component {
-                    Component::AnnotationAssertion(AnnotationAssertion { subject: AnnotationSubject::IRI(s), ann }) if &class_iri == s => {
+                    Component::AnnotationAssertion(AnnotationAssertion { subject: AnnotationSubject::IRI(s), ann }) if &entity_iri == s => {
                         match ann {
                             Annotation { ap, av: AnnotationValue::Literal(Literal::Simple { literal }), ann } => {
                                 if ann_iri.eq(&ap.0) { Some(literal.clone()) } else { None }
@@ -657,11 +692,7 @@ impl PyIndexedOntology {
             if self.index_strategy == IndexCreationStrategy::OnQuery {
                 self.build_iri_index();
             }
-            if let Some(index) = &self.iri_index {
-                Some(index)
-            } else {
-                None
-            }
+            self.iri_index.as_ref()
         };
 
         if let Some(iri_index) = iri_index {
@@ -781,7 +812,10 @@ impl PyIndexedOntology {
     /// Use this method instead of  `model.IRI.parse` if possible as it is more optimized using caches.
     pub fn curie(&self, py: Python<'_>, curie: String) -> PyResult<model::IRI> {
         let mapping = self.mapping.borrow_mut(py);
-        let build = self.build.read().unwrap();
+        let build = self
+            .build
+            .read()
+            .map_err(to_py_err!("Failed get build instance!"))?;
         let iri = mapping
             .0
             .expand_curie_string(&curie)
@@ -1066,23 +1100,76 @@ impl PyIndexedOntology {
         StructuralReasoner::create_reasoner(self.into())
     }
 
-    pub fn get_subclasses(&self, iri: &IRI<ArcStr>) -> HashSet<IRI<ArcStr>> {
-        let reasoner = self.create_structural_reasoner();
-        let class = Class(iri.clone());
-        reasoner
-            .get_direct_subclasses_of_iri(&class)
-            .map(|c| c.0)
+    fn get_component_index(
+        &mut self,
+    ) -> Option<&ComponentMappedIndex<ArcStr, ArcAnnotatedComponent>> {
+        if self.component_index.is_none() && self.index_strategy == IndexCreationStrategy::OnQuery {
+            self.build_component_index();
+        }
+
+        self.component_index.as_ref()
+    }
+
+    fn get_iri_index(&mut self) -> Option<&IRIMappedIndex<ArcStr, ArcAnnotatedComponent>> {
+        if self.iri_index.is_none() && self.index_strategy == IndexCreationStrategy::OnQuery {
+            self.build_iri_index();
+        }
+
+        self.iri_index.as_ref()
+    }
+
+    pub fn get_subclasses(&mut self, iri: &IRI<ArcStr>) -> HashSet<ClassExpression<ArcStr>> {
+        let subclassof_axioms: Box<dyn std::iter::Iterator<Item = &AnnotatedComponent<ArcStr>>> =
+            if let Some(iri_index) = self.get_iri_index() {
+                let components = iri_index.component_for_iri(iri);
+                Box::new(components.filter(|a| a.kind() == ComponentKind::SubClassOf))
+            } else if let Some(component_index) = self.get_component_index() {
+                Box::new(component_index.component_for_kind(ComponentKind::SubClassOf))
+            } else {
+                Box::new(
+                    (&self.set_index)
+                        .into_iter()
+                        .filter(|a| a.kind() == ComponentKind::SubClassOf),
+                )
+            };
+
+        subclassof_axioms
+            .filter_map(|a| match &a.component {
+                Component::SubClassOf(SubClassOf {
+                    sub,
+                    sup: ClassExpression::Class(Class(sup)),
+                }) if sup == iri => Some(sub.clone()),
+                _ => None,
+            })
             .collect()
     }
 
-    pub fn get_superclasses(&self, iri: &IRI<ArcStr>) -> HashSet<IRI<ArcStr>> {
-        let reasoner = self.create_structural_reasoner();
-        let class = Class(iri.clone());
-        reasoner
-            .get_direct_superclasses_of_iri(&class)
-            .map(|c| c.0)
+    pub fn get_superclasses(&mut self, iri: &IRI<ArcStr>) -> HashSet<ClassExpression<ArcStr>> {
+        let subclassof_axioms: Box<dyn std::iter::Iterator<Item = &AnnotatedComponent<ArcStr>>> =
+            if let Some(iri_index) = self.get_iri_index() {
+                let components = iri_index.component_for_iri(iri);
+                Box::new(components.filter(|a| a.kind() == ComponentKind::SubClassOf))
+            } else if let Some(component_index) = self.get_component_index() {
+                Box::new(component_index.component_for_kind(ComponentKind::SubClassOf))
+            } else {
+                Box::new(
+                    (&self.set_index)
+                        .into_iter()
+                        .filter(|a| a.kind() == ComponentKind::SubClassOf),
+                )
+            };
+
+        subclassof_axioms
+            .filter_map(|a| match &a.component {
+                Component::SubClassOf(SubClassOf {
+                    sub: ClassExpression::Class(Class(sub)),
+                    sup,
+                }) if sub == iri => Some(sup.clone()),
+                _ => None,
+            })
             .collect()
     }
+
     fn get_id(&mut self) -> Option<&OntologyID<ArcStr>> {
         let components = if let Some(component_index) = &self.component_index {
             Box::new(component_index.component_for_kind(ComponentKind::OntologyID))
