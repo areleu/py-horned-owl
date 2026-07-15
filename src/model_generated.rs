@@ -39,7 +39,7 @@ impl FromCompatible<IRI> for horned_owl::model::IRI<Arc<str>> {
 
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[pyclass(module = "pyhornedowl.model")]
+#[pyclass(module = "pyhornedowl.model",from_py_object)]
 pub struct IRI(horned_owl::model::IRI<ArcStr>);
 
 impl From<IRI> for horned_owl::model::IRI<ArcStr> {
@@ -123,7 +123,7 @@ impl FromCompatible<horned_owl::vocab::Facet> for Facet {
 
 #[doc = doc!(Facet)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[pyclass(module = "pyhornedowl.model")]
+#[pyclass(module = "pyhornedowl.model",from_py_object)]
 pub enum Facet {
     Length = 1,
     MinLength = 2,
@@ -258,7 +258,7 @@ for BTreeSet<horned_owl::model::Annotation<Arc<str>>>
     "\n\n",
     doc!(Class)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Class (
     #[doc="first: "]
@@ -473,7 +473,7 @@ impl FromCompatible<&Vec<horned_owl::model::Class<ArcStr>>> for VecWrap<Class> {
     "\n\n",
     doc!(AnonymousIndividual)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AnonymousIndividual (
     #[doc="first: "]
@@ -671,7 +671,7 @@ impl FromCompatible<&Vec<horned_owl::model::AnonymousIndividual<ArcStr>>> for Ve
     "\n\n",
     doc!(NamedIndividual)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NamedIndividual (
     #[doc="first: "]
@@ -869,7 +869,7 @@ impl FromCompatible<&Vec<horned_owl::model::NamedIndividual<ArcStr>>> for VecWra
     "\n\n",
     doc!(ObjectProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ObjectProperty (
     #[doc="first: "]
@@ -1141,7 +1141,7 @@ impl FromCompatible<&Vec<horned_owl::model::ObjectProperty<ArcStr>>> for VecWrap
     "\n\n",
     doc!(Datatype)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Datatype (
     #[doc="first: "]
@@ -1339,7 +1339,7 @@ impl FromCompatible<&Vec<horned_owl::model::Datatype<ArcStr>>> for VecWrap<Datat
     "\n\n",
     doc!(DataProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DataProperty (
     #[doc="first: "]
@@ -1536,7 +1536,7 @@ impl FromCompatible<&Vec<horned_owl::model::DataProperty<ArcStr>>> for VecWrap<D
     "\n\n",
     doc!(FacetRestriction)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FacetRestriction {
         #[doc="f: Facet"]
@@ -1959,7 +1959,7 @@ pub struct ObjectPropertyExpression(ObjectPropertyExpression_Inner);
     #[doc = concat!("InverseObjectProperty(first: ObjectProperty",
         "\n\n",doc!(InverseObjectProperty))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct InverseObjectProperty(
         #[pyo3(get,set,name="first")]
@@ -2150,17 +2150,19 @@ impl<'py> IntoPyObject<'py> for ObjectPropertyExpression {
 
 }
 
-impl <'py> FromPyObject<'py> for ObjectPropertyExpression {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for ObjectPropertyExpression {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
             {
-            	let r = ObjectProperty::extract_bound(ob);
+            	let r = ObjectProperty::extract(ob);
                 if let Ok(local) = r {
                     let inner = ObjectPropertyExpression_Inner::ObjectProperty(local);
                     return Ok(ObjectPropertyExpression(inner));
                 }
             }
             {
-                let r = InverseObjectProperty::extract_bound(ob);
+                let r = InverseObjectProperty::extract(ob);
                 if let Ok(local) = r {
                     let inner = ObjectPropertyExpression_Inner::InverseObjectProperty(local);
                     return Ok(ObjectPropertyExpression(inner));
@@ -2327,7 +2329,7 @@ pub struct Literal(Literal_Inner);
     #[doc = concat!("SimpleLiteral(literal: str",
         "\n\n",doc!(SimpleLiteral))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct SimpleLiteral{
         #[doc="literal: str"]
@@ -2395,7 +2397,7 @@ pub struct Literal(Literal_Inner);
     #[doc = concat!("LanguageLiteral(literal: strlang: str",
         "\n\n",doc!(LanguageLiteral))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct LanguageLiteral{
         #[doc="literal: str"]
@@ -2473,7 +2475,7 @@ pub struct Literal(Literal_Inner);
     #[doc = concat!("DatatypeLiteral(literal: strdatatype_iri: IRI",
         "\n\n",doc!(DatatypeLiteral))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DatatypeLiteral{
         #[doc="literal: str"]
@@ -2612,24 +2614,26 @@ impl<'py> IntoPyObject<'py> for Literal {
 
 }
 
-impl <'py> FromPyObject<'py> for Literal {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for Literal {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
             {
-                let r = SimpleLiteral::extract_bound(ob);
+                let r = SimpleLiteral::extract(ob);
                 if let Ok(local) = r {
                     let inner = Literal_Inner::Simple(local);
                     return Ok(Literal(inner));
                 }
             }
             {
-                let r = LanguageLiteral::extract_bound(ob);
+                let r = LanguageLiteral::extract(ob);
                 if let Ok(local) = r {
                     let inner = Literal_Inner::Language(local);
                     return Ok(Literal(inner));
                 }
             }
             {
-                let r = DatatypeLiteral::extract_bound(ob);
+                let r = DatatypeLiteral::extract(ob);
                 if let Ok(local) = r {
                     let inner = Literal_Inner::Datatype(local);
                     return Ok(Literal(inner));
@@ -2799,7 +2803,7 @@ pub struct DataRange(DataRange_Inner);
     #[doc = concat!("DataIntersectionOf(first: typing.List[DataRange]",
         "\n\n",doc!(DataIntersectionOf))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataIntersectionOf(
         #[pyo3(get,set,name="first")]
@@ -2868,7 +2872,7 @@ pub struct DataRange(DataRange_Inner);
     #[doc = concat!("DataUnionOf(first: typing.List[DataRange]",
         "\n\n",doc!(DataUnionOf))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataUnionOf(
         #[pyo3(get,set,name="first")]
@@ -2937,7 +2941,7 @@ pub struct DataRange(DataRange_Inner);
     #[doc = concat!("DataComplementOf(first: DataRange",
         "\n\n",doc!(DataComplementOf))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataComplementOf(
         #[pyo3(get,set,name="first")]
@@ -3006,7 +3010,7 @@ pub struct DataRange(DataRange_Inner);
     #[doc = concat!("DataOneOf(first: typing.List[Literal]",
         "\n\n",doc!(DataOneOf))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataOneOf(
         #[pyo3(get,set,name="first")]
@@ -3075,7 +3079,7 @@ pub struct DataRange(DataRange_Inner);
     #[doc = concat!("DatatypeRestriction(first: Datatypesecond: typing.List[FacetRestriction]",
         "\n\n",doc!(DatatypeRestriction))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DatatypeRestriction(
         #[pyo3(get,set,name="first")]
@@ -3242,45 +3246,47 @@ impl<'py> IntoPyObject<'py> for DataRange {
 
 }
 
-impl <'py> FromPyObject<'py> for DataRange {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for DataRange {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
             {
-            	let r = Datatype::extract_bound(ob);
+            	let r = Datatype::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::Datatype(local);
                     return Ok(DataRange(inner));
                 }
             }
             {
-                let r = DataIntersectionOf::extract_bound(ob);
+                let r = DataIntersectionOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::DataIntersectionOf(local);
                     return Ok(DataRange(inner));
                 }
             }
             {
-                let r = DataUnionOf::extract_bound(ob);
+                let r = DataUnionOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::DataUnionOf(local);
                     return Ok(DataRange(inner));
                 }
             }
             {
-                let r = DataComplementOf::extract_bound(ob);
+                let r = DataComplementOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::DataComplementOf(local);
                     return Ok(DataRange(inner));
                 }
             }
             {
-                let r = DataOneOf::extract_bound(ob);
+                let r = DataOneOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::DataOneOf(local);
                     return Ok(DataRange(inner));
                 }
             }
             {
-                let r = DatatypeRestriction::extract_bound(ob);
+                let r = DatatypeRestriction::extract(ob);
                 if let Ok(local) = r {
                     let inner = DataRange_Inner::DatatypeRestriction(local);
                     return Ok(DataRange(inner));
@@ -3462,7 +3468,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectIntersectionOf(first: typing.List[ClassExpression]",
         "\n\n",doc!(ObjectIntersectionOf))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectIntersectionOf(
         #[pyo3(get,set,name="first")]
@@ -3548,7 +3554,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectUnionOf(first: typing.List[ClassExpression]",
         "\n\n",doc!(ObjectUnionOf))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectUnionOf(
         #[pyo3(get,set,name="first")]
@@ -3634,7 +3640,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectComplementOf(first: ClassExpression",
         "\n\n",doc!(ObjectComplementOf))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectComplementOf(
         #[pyo3(get,set,name="first")]
@@ -3720,7 +3726,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectOneOf(first: typing.List[Individual]",
         "\n\n",doc!(ObjectOneOf))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectOneOf(
         #[pyo3(get,set,name="first")]
@@ -3806,7 +3812,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectSomeValuesFrom(ope: ObjectPropertyExpressionbce: ClassExpression",
         "\n\n",doc!(ObjectSomeValuesFrom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectSomeValuesFrom{
         #[doc="ope: ObjectPropertyExpression"]
@@ -3901,7 +3907,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectAllValuesFrom(ope: ObjectPropertyExpressionbce: ClassExpression",
         "\n\n",doc!(ObjectAllValuesFrom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectAllValuesFrom{
         #[doc="ope: ObjectPropertyExpression"]
@@ -3996,7 +4002,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectHasValue(ope: ObjectPropertyExpressioni: Individual",
         "\n\n",doc!(ObjectHasValue))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectHasValue{
         #[doc="ope: ObjectPropertyExpression"]
@@ -4091,7 +4097,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectHasSelf(first: ObjectPropertyExpression",
         "\n\n",doc!(ObjectHasSelf))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectHasSelf(
         #[pyo3(get,set,name="first")]
@@ -4177,7 +4183,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectMinCardinality(n: intope: ObjectPropertyExpressionbce: ClassExpression",
         "\n\n",doc!(ObjectMinCardinality))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectMinCardinality{
         #[doc="n: int"]
@@ -4282,7 +4288,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectMaxCardinality(n: intope: ObjectPropertyExpressionbce: ClassExpression",
         "\n\n",doc!(ObjectMaxCardinality))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectMaxCardinality{
         #[doc="n: int"]
@@ -4387,7 +4393,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("ObjectExactCardinality(n: intope: ObjectPropertyExpressionbce: ClassExpression",
         "\n\n",doc!(ObjectExactCardinality))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectExactCardinality{
         #[doc="n: int"]
@@ -4492,7 +4498,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("DataSomeValuesFrom(dp: DataPropertydr: DataRange",
         "\n\n",doc!(DataSomeValuesFrom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataSomeValuesFrom{
         #[doc="dp: DataProperty"]
@@ -4587,7 +4593,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("DataAllValuesFrom(dp: DataPropertydr: DataRange",
         "\n\n",doc!(DataAllValuesFrom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataAllValuesFrom{
         #[doc="dp: DataProperty"]
@@ -4682,7 +4688,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("DataHasValue(dp: DataPropertyl: Literal",
         "\n\n",doc!(DataHasValue))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataHasValue{
         #[doc="dp: DataProperty"]
@@ -4777,7 +4783,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("DataMinCardinality(n: intdp: DataPropertydr: DataRange",
         "\n\n",doc!(DataMinCardinality))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataMinCardinality{
         #[doc="n: int"]
@@ -4882,7 +4888,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("DataMaxCardinality(n: intdp: DataPropertydr: DataRange",
         "\n\n",doc!(DataMaxCardinality))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataMaxCardinality{
         #[doc="n: int"]
@@ -4987,7 +4993,7 @@ pub struct ClassExpression(ClassExpression_Inner);
     #[doc = concat!("DataExactCardinality(n: intdp: DataPropertydr: DataRange",
         "\n\n",doc!(DataExactCardinality))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataExactCardinality{
         #[doc="n: int"]
@@ -5348,129 +5354,131 @@ impl<'py> IntoPyObject<'py> for ClassExpression {
 
 }
 
-impl <'py> FromPyObject<'py> for ClassExpression {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for ClassExpression {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
             {
-            	let r = Class::extract_bound(ob);
+            	let r = Class::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::Class(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectIntersectionOf::extract_bound(ob);
+                let r = ObjectIntersectionOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectIntersectionOf(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectUnionOf::extract_bound(ob);
+                let r = ObjectUnionOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectUnionOf(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectComplementOf::extract_bound(ob);
+                let r = ObjectComplementOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectComplementOf(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectOneOf::extract_bound(ob);
+                let r = ObjectOneOf::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectOneOf(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectSomeValuesFrom::extract_bound(ob);
+                let r = ObjectSomeValuesFrom::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectSomeValuesFrom(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectAllValuesFrom::extract_bound(ob);
+                let r = ObjectAllValuesFrom::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectAllValuesFrom(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectHasValue::extract_bound(ob);
+                let r = ObjectHasValue::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectHasValue(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectHasSelf::extract_bound(ob);
+                let r = ObjectHasSelf::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectHasSelf(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectMinCardinality::extract_bound(ob);
+                let r = ObjectMinCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectMinCardinality(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectMaxCardinality::extract_bound(ob);
+                let r = ObjectMaxCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectMaxCardinality(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = ObjectExactCardinality::extract_bound(ob);
+                let r = ObjectExactCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::ObjectExactCardinality(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataSomeValuesFrom::extract_bound(ob);
+                let r = DataSomeValuesFrom::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataSomeValuesFrom(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataAllValuesFrom::extract_bound(ob);
+                let r = DataAllValuesFrom::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataAllValuesFrom(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataHasValue::extract_bound(ob);
+                let r = DataHasValue::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataHasValue(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataMinCardinality::extract_bound(ob);
+                let r = DataMinCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataMinCardinality(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataMaxCardinality::extract_bound(ob);
+                let r = DataMaxCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataMaxCardinality(local);
                     return Ok(ClassExpression(inner));
                 }
             }
             {
-                let r = DataExactCardinality::extract_bound(ob);
+                let r = DataExactCardinality::extract(ob);
                 if let Ok(local) = r {
                     let inner = ClassExpression_Inner::DataExactCardinality(local);
                     return Ok(ClassExpression(inner));
@@ -6009,7 +6017,7 @@ impl FromCompatible<&Vec<horned_owl::model::AnnotationSubject<ArcStr>>> for VecW
     "\n\n",
     doc!(AnnotationProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AnnotationProperty (
     #[doc="first: "]
@@ -6394,7 +6402,7 @@ impl FromCompatible<&Vec<horned_owl::model::AnnotationValue<ArcStr>>> for VecWra
     "\n\n",
     doc!(Annotation)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Annotation {
         #[doc="ap: AnnotationProperty"]
@@ -6614,7 +6622,7 @@ impl FromCompatible<&Vec<horned_owl::model::Annotation<ArcStr>>> for VecWrap<Ann
     "\n\n",
     doc!(OntologyAnnotation)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OntologyAnnotation (
     #[doc="first: "]
@@ -6802,7 +6810,7 @@ impl FromCompatible<&Vec<horned_owl::model::OntologyAnnotation<ArcStr>>> for Vec
     "\n\n",
     doc!(Import)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Import (
     #[doc="first: "]
@@ -6990,7 +6998,7 @@ impl FromCompatible<&Vec<horned_owl::model::Import<ArcStr>>> for VecWrap<Import>
     "\n\n",
     doc!(DeclareClass)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeclareClass (
     #[doc="first: "]
@@ -7178,7 +7186,7 @@ impl FromCompatible<&Vec<horned_owl::model::DeclareClass<ArcStr>>> for VecWrap<D
     "\n\n",
     doc!(DeclareObjectProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeclareObjectProperty (
     #[doc="first: "]
@@ -7366,7 +7374,7 @@ impl FromCompatible<&Vec<horned_owl::model::DeclareObjectProperty<ArcStr>>> for 
     "\n\n",
     doc!(DeclareAnnotationProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeclareAnnotationProperty (
     #[doc="first: "]
@@ -7554,7 +7562,7 @@ impl FromCompatible<&Vec<horned_owl::model::DeclareAnnotationProperty<ArcStr>>> 
     "\n\n",
     doc!(DeclareDataProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeclareDataProperty (
     #[doc="first: "]
@@ -7742,7 +7750,7 @@ impl FromCompatible<&Vec<horned_owl::model::DeclareDataProperty<ArcStr>>> for Ve
     "\n\n",
     doc!(DeclareNamedIndividual)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeclareNamedIndividual (
     #[doc="first: "]
@@ -7930,7 +7938,7 @@ impl FromCompatible<&Vec<horned_owl::model::DeclareNamedIndividual<ArcStr>>> for
     "\n\n",
     doc!(DeclareDatatype)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeclareDatatype (
     #[doc="first: "]
@@ -8117,7 +8125,7 @@ impl FromCompatible<&Vec<horned_owl::model::DeclareDatatype<ArcStr>>> for VecWra
     "\n\n",
     doc!(SubClassOf)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SubClassOf {
         #[doc="sub: ClassExpression"]
@@ -8337,7 +8345,7 @@ impl FromCompatible<&Vec<horned_owl::model::SubClassOf<ArcStr>>> for VecWrap<Sub
     "\n\n",
     doc!(EquivalentClasses)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EquivalentClasses (
     #[doc="first: "]
@@ -8525,7 +8533,7 @@ impl FromCompatible<&Vec<horned_owl::model::EquivalentClasses<ArcStr>>> for VecW
     "\n\n",
     doc!(DisjointClasses)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DisjointClasses (
     #[doc="first: "]
@@ -8713,7 +8721,7 @@ impl FromCompatible<&Vec<horned_owl::model::DisjointClasses<ArcStr>>> for VecWra
     "\n\n",
     doc!(DisjointUnion)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DisjointUnion (
     #[doc="first: "]
@@ -9095,7 +9103,7 @@ impl FromCompatible<&Vec<horned_owl::model::SubObjectPropertyExpression<ArcStr>>
     "\n\n",
     doc!(SubObjectPropertyOf)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SubObjectPropertyOf {
         #[doc="sub: SubObjectPropertyExpression"]
@@ -9315,7 +9323,7 @@ impl FromCompatible<&Vec<horned_owl::model::SubObjectPropertyOf<ArcStr>>> for Ve
     "\n\n",
     doc!(EquivalentObjectProperties)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EquivalentObjectProperties (
     #[doc="first: "]
@@ -9503,7 +9511,7 @@ impl FromCompatible<&Vec<horned_owl::model::EquivalentObjectProperties<ArcStr>>>
     "\n\n",
     doc!(DisjointObjectProperties)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DisjointObjectProperties (
     #[doc="first: "]
@@ -9691,7 +9699,7 @@ impl FromCompatible<&Vec<horned_owl::model::DisjointObjectProperties<ArcStr>>> f
     "\n\n",
     doc!(InverseObjectProperties)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct InverseObjectProperties (
     #[doc="first: "]
@@ -9884,7 +9892,7 @@ impl FromCompatible<&Vec<horned_owl::model::InverseObjectProperties<ArcStr>>> fo
     "\n\n",
     doc!(ObjectPropertyDomain)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ObjectPropertyDomain {
         #[doc="ope: ObjectPropertyExpression"]
@@ -10103,7 +10111,7 @@ impl FromCompatible<&Vec<horned_owl::model::ObjectPropertyDomain<ArcStr>>> for V
     "\n\n",
     doc!(ObjectPropertyRange)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ObjectPropertyRange {
         #[doc="ope: ObjectPropertyExpression"]
@@ -10323,7 +10331,7 @@ impl FromCompatible<&Vec<horned_owl::model::ObjectPropertyRange<ArcStr>>> for Ve
     "\n\n",
     doc!(FunctionalObjectProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FunctionalObjectProperty (
     #[doc="first: "]
@@ -10511,7 +10519,7 @@ impl FromCompatible<&Vec<horned_owl::model::FunctionalObjectProperty<ArcStr>>> f
     "\n\n",
     doc!(InverseFunctionalObjectProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct InverseFunctionalObjectProperty (
     #[doc="first: "]
@@ -10699,7 +10707,7 @@ impl FromCompatible<&Vec<horned_owl::model::InverseFunctionalObjectProperty<ArcS
     "\n\n",
     doc!(ReflexiveObjectProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ReflexiveObjectProperty (
     #[doc="first: "]
@@ -10887,7 +10895,7 @@ impl FromCompatible<&Vec<horned_owl::model::ReflexiveObjectProperty<ArcStr>>> fo
     "\n\n",
     doc!(IrreflexiveObjectProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IrreflexiveObjectProperty (
     #[doc="first: "]
@@ -11075,7 +11083,7 @@ impl FromCompatible<&Vec<horned_owl::model::IrreflexiveObjectProperty<ArcStr>>> 
     "\n\n",
     doc!(SymmetricObjectProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SymmetricObjectProperty (
     #[doc="first: "]
@@ -11263,7 +11271,7 @@ impl FromCompatible<&Vec<horned_owl::model::SymmetricObjectProperty<ArcStr>>> fo
     "\n\n",
     doc!(AsymmetricObjectProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AsymmetricObjectProperty (
     #[doc="first: "]
@@ -11451,7 +11459,7 @@ impl FromCompatible<&Vec<horned_owl::model::AsymmetricObjectProperty<ArcStr>>> f
     "\n\n",
     doc!(TransitiveObjectProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TransitiveObjectProperty (
     #[doc="first: "]
@@ -11638,7 +11646,7 @@ impl FromCompatible<&Vec<horned_owl::model::TransitiveObjectProperty<ArcStr>>> f
     "\n\n",
     doc!(SubDataPropertyOf)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SubDataPropertyOf {
         #[doc="sub: DataProperty"]
@@ -11858,7 +11866,7 @@ impl FromCompatible<&Vec<horned_owl::model::SubDataPropertyOf<ArcStr>>> for VecW
     "\n\n",
     doc!(EquivalentDataProperties)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EquivalentDataProperties (
     #[doc="first: "]
@@ -12046,7 +12054,7 @@ impl FromCompatible<&Vec<horned_owl::model::EquivalentDataProperties<ArcStr>>> f
     "\n\n",
     doc!(DisjointDataProperties)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DisjointDataProperties (
     #[doc="first: "]
@@ -12233,7 +12241,7 @@ impl FromCompatible<&Vec<horned_owl::model::DisjointDataProperties<ArcStr>>> for
     "\n\n",
     doc!(DataPropertyDomain)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DataPropertyDomain {
         #[doc="dp: DataProperty"]
@@ -12452,7 +12460,7 @@ impl FromCompatible<&Vec<horned_owl::model::DataPropertyDomain<ArcStr>>> for Vec
     "\n\n",
     doc!(DataPropertyRange)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DataPropertyRange {
         #[doc="dp: DataProperty"]
@@ -12672,7 +12680,7 @@ impl FromCompatible<&Vec<horned_owl::model::DataPropertyRange<ArcStr>>> for VecW
     "\n\n",
     doc!(FunctionalDataProperty)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FunctionalDataProperty (
     #[doc="first: "]
@@ -12859,7 +12867,7 @@ impl FromCompatible<&Vec<horned_owl::model::FunctionalDataProperty<ArcStr>>> for
     "\n\n",
     doc!(DatatypeDefinition)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DatatypeDefinition {
         #[doc="kind: Datatype"]
@@ -13078,7 +13086,7 @@ impl FromCompatible<&Vec<horned_owl::model::DatatypeDefinition<ArcStr>>> for Vec
     "\n\n",
     doc!(HasKey)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct HasKey {
         #[doc="ce: ClassExpression"]
@@ -13298,7 +13306,7 @@ impl FromCompatible<&Vec<horned_owl::model::HasKey<ArcStr>>> for VecWrap<HasKey>
     "\n\n",
     doc!(SameIndividual)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SameIndividual (
     #[doc="first: "]
@@ -13486,7 +13494,7 @@ impl FromCompatible<&Vec<horned_owl::model::SameIndividual<ArcStr>>> for VecWrap
     "\n\n",
     doc!(DifferentIndividuals)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DifferentIndividuals (
     #[doc="first: "]
@@ -13673,7 +13681,7 @@ impl FromCompatible<&Vec<horned_owl::model::DifferentIndividuals<ArcStr>>> for V
     "\n\n",
     doc!(ClassAssertion)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ClassAssertion {
         #[doc="ce: ClassExpression"]
@@ -13892,7 +13900,7 @@ impl FromCompatible<&Vec<horned_owl::model::ClassAssertion<ArcStr>>> for VecWrap
     "\n\n",
     doc!(ObjectPropertyAssertion)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ObjectPropertyAssertion {
         #[doc="ope: ObjectPropertyExpression"]
@@ -14124,7 +14132,7 @@ impl FromCompatible<&Vec<horned_owl::model::ObjectPropertyAssertion<ArcStr>>> fo
     "\n\n",
     doc!(NegativeObjectPropertyAssertion)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NegativeObjectPropertyAssertion {
         #[doc="ope: ObjectPropertyExpression"]
@@ -14356,7 +14364,7 @@ impl FromCompatible<&Vec<horned_owl::model::NegativeObjectPropertyAssertion<ArcS
     "\n\n",
     doc!(DataPropertyAssertion)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DataPropertyAssertion {
         #[doc="dp: DataProperty"]
@@ -14588,7 +14596,7 @@ impl FromCompatible<&Vec<horned_owl::model::DataPropertyAssertion<ArcStr>>> for 
     "\n\n",
     doc!(NegativeDataPropertyAssertion)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NegativeDataPropertyAssertion {
         #[doc="dp: DataProperty"]
@@ -14820,7 +14828,7 @@ impl FromCompatible<&Vec<horned_owl::model::NegativeDataPropertyAssertion<ArcStr
     "\n\n",
     doc!(AnnotationAssertion)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AnnotationAssertion {
         #[doc="subject: AnnotationSubject"]
@@ -15039,7 +15047,7 @@ impl FromCompatible<&Vec<horned_owl::model::AnnotationAssertion<ArcStr>>> for Ve
     "\n\n",
     doc!(SubAnnotationPropertyOf)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SubAnnotationPropertyOf {
         #[doc="sub: AnnotationProperty"]
@@ -15258,7 +15266,7 @@ impl FromCompatible<&Vec<horned_owl::model::SubAnnotationPropertyOf<ArcStr>>> fo
     "\n\n",
     doc!(AnnotationPropertyDomain)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AnnotationPropertyDomain {
         #[doc="ap: AnnotationProperty"]
@@ -15477,7 +15485,7 @@ impl FromCompatible<&Vec<horned_owl::model::AnnotationPropertyDomain<ArcStr>>> f
     "\n\n",
     doc!(AnnotationPropertyRange)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AnnotationPropertyRange {
         #[doc="ap: AnnotationProperty"]
@@ -15697,7 +15705,7 @@ impl FromCompatible<&Vec<horned_owl::model::AnnotationPropertyRange<ArcStr>>> fo
     "\n\n",
     doc!(DocIRI)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DocIRI (
     #[doc="first: "]
@@ -15884,7 +15892,7 @@ impl FromCompatible<&Vec<horned_owl::model::DocIRI<ArcStr>>> for VecWrap<DocIRI>
     "\n\n",
     doc!(OntologyID)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OntologyID {
         #[doc="iri: typing.Optional[IRI]"]
@@ -16104,7 +16112,7 @@ impl FromCompatible<&Vec<horned_owl::model::OntologyID<ArcStr>>> for VecWrap<Ont
     "\n\n",
     doc!(Variable)
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Variable (
     #[doc="first: "]
@@ -16689,7 +16697,7 @@ pub struct Atom(Atom_Inner);
     #[doc = concat!("BuiltInAtom(pred: IRIargs: typing.List[DArgument]",
         "\n\n",doc!(BuiltInAtom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct BuiltInAtom{
         #[doc="pred: IRI"]
@@ -16767,7 +16775,7 @@ pub struct Atom(Atom_Inner);
     #[doc = concat!("ClassAtom(pred: ClassExpressionarg: IArgument",
         "\n\n",doc!(ClassAtom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ClassAtom{
         #[doc="pred: ClassExpression"]
@@ -16845,7 +16853,7 @@ pub struct Atom(Atom_Inner);
     #[doc = concat!("DataPropertyAtom(pred: DataPropertyargs: typing.Tuple[DArgument,DArgument]",
         "\n\n",doc!(DataPropertyAtom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataPropertyAtom{
         #[doc="pred: DataProperty"]
@@ -16923,7 +16931,7 @@ pub struct Atom(Atom_Inner);
     #[doc = concat!("DataRangeAtom(pred: DataRangearg: DArgument",
         "\n\n",doc!(DataRangeAtom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DataRangeAtom{
         #[doc="pred: DataRange"]
@@ -17001,7 +17009,7 @@ pub struct Atom(Atom_Inner);
     #[doc = concat!("DifferentIndividualsAtom(first: IArgumentsecond: IArgument",
         "\n\n",doc!(DifferentIndividualsAtom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DifferentIndividualsAtom(
         #[pyo3(get,set,name="first")]
@@ -17079,7 +17087,7 @@ pub struct Atom(Atom_Inner);
     #[doc = concat!("ObjectPropertyAtom(pred: ObjectPropertyExpressionargs: typing.Tuple[IArgument,IArgument]",
         "\n\n",doc!(ObjectPropertyAtom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectPropertyAtom{
         #[doc="pred: ObjectPropertyExpression"]
@@ -17157,7 +17165,7 @@ pub struct Atom(Atom_Inner);
     #[doc = concat!("SameIndividualAtom(first: IArgumentsecond: IArgument",
         "\n\n",doc!(SameIndividualAtom))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct SameIndividualAtom(
         #[pyo3(get,set,name="first")]
@@ -17346,52 +17354,54 @@ impl<'py> IntoPyObject<'py> for Atom {
 
 }
 
-impl <'py> FromPyObject<'py> for Atom {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for Atom {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
             {
-                let r = BuiltInAtom::extract_bound(ob);
+                let r = BuiltInAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::BuiltInAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = ClassAtom::extract_bound(ob);
+                let r = ClassAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::ClassAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = DataPropertyAtom::extract_bound(ob);
+                let r = DataPropertyAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::DataPropertyAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = DataRangeAtom::extract_bound(ob);
+                let r = DataRangeAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::DataRangeAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = DifferentIndividualsAtom::extract_bound(ob);
+                let r = DifferentIndividualsAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::DifferentIndividualsAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = ObjectPropertyAtom::extract_bound(ob);
+                let r = ObjectPropertyAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::ObjectPropertyAtom(local);
                     return Ok(Atom(inner));
                 }
             }
             {
-                let r = SameIndividualAtom::extract_bound(ob);
+                let r = SameIndividualAtom::extract(ob);
                 if let Ok(local) = r {
                     let inner = Atom_Inner::SameIndividualAtom(local);
                     return Ok(Atom(inner));
@@ -17542,7 +17552,7 @@ impl FromCompatible<&Vec<horned_owl::model::Atom<ArcStr>>> for VecWrap<Atom> {
     "\n\n",
     doc!(Rule)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Rule {
         #[doc="head: typing.List[Atom]"]
@@ -18355,7 +18365,7 @@ impl FromCompatible<&Vec<horned_owl::model::Component<ArcStr>>> for VecWrap<Comp
     "\n\n",
     doc!(AnnotatedComponent)
 )]
-#[pyclass(module="pyhornedowl.model",mapping)]
+#[pyclass(module="pyhornedowl.model",mapping,from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AnnotatedComponent {
         #[doc="component: Component"]

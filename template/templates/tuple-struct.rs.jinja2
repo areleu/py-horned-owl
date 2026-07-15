@@ -6,7 +6,7 @@
     "\n\n",
     doc!({{ model.name }})
 )]
-#[pyclass(module="pyhornedowl.model")]
+#[pyclass(module="pyhornedowl.model",from_py_object)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct {{ model.name }} (
 {%- for typ in model.fields %}

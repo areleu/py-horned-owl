@@ -28,7 +28,7 @@ pub struct {{ model.name }}({{ model.name }}_Inner);
     {%- endfor -%}",
         "\n\n",doc!({{ v_name_full }}))]
     #[allow(non_camel_case_types)]
-    #[pyclass(module="pyhornedowl.model")]
+    #[pyclass(module="pyhornedowl.model",from_py_object)]
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct {{ v_name_full }}
     {%- if variant.fields is list %}(
@@ -208,13 +208,15 @@ impl<'py> IntoPyObject<'py> for {{ model.name }} {
 
 }
 
-impl <'py> FromPyObject<'py> for {{ model.name }} {
-    fn extract_bound(ob: &Bound<'py, pyo3::PyAny>) -> pyo3::PyResult<Self> {
+impl <'py> FromPyObject<'_, 'py> for {{ model.name }} {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
         {%- for v_name, variant in model.variants.items() %}
             {%- set v_name_full = variant.py_name if variant.py_name else (variant.name if variant.name else v_name)%}
             {%- if variant.transparent %}
             {
-            	let r = {{ v_name_full }}::extract_bound(ob);
+            	let r = {{ v_name_full }}::extract(ob);
                 if let Ok(local) = r {
                     let inner = {{ model.name }}_Inner::{{ v_name }}(local);
                     return Ok({{ model.name }}(inner));
@@ -222,7 +224,7 @@ impl <'py> FromPyObject<'py> for {{ model.name }} {
             }
             {%- else %}
             {
-                let r = {{ v_name_full }}::extract_bound(ob);
+                let r = {{ v_name_full }}::extract(ob);
                 if let Ok(local) = r {
                     let inner = {{ model.name }}_Inner::{{ v_name }}(local);
                     return Ok({{ model.name }}(inner));

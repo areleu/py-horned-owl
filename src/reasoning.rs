@@ -21,7 +21,7 @@ pub struct DynamicLoadedReasoner(
 );
 
 #[derive(Clone)]
-#[pyclass]
+#[pyclass(from_py_object)]
 pub struct PyReasoner(pub(crate) Arc<Mutex<DynamicLoadedReasoner>>);
 
 unsafe impl Send for PyReasoner {}
